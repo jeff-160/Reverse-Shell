@@ -1,6 +1,8 @@
 ## ❗ DISCLAIMER ❗
 
-This is malware, only run it on a virtual machine or if you know what you're doing.
+This is malware, only run it on a virtual machine or if you know what you're doing.  
+
+FOR EDUCATIONAL PURPOSES ONLY
 
 ## Introduction ##
 
