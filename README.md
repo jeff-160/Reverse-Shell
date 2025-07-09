@@ -7,13 +7,12 @@ FOR EDUCATIONAL PURPOSES ONLY
 ## Introduction ##
 
 `main.bat`
-- reverse shell program
-- disables windows security notifications and windows firewall
-- schedules the reverse shell client to run every minute if it isn't already
+- removes security restrictions and sets up the reverse shell
 
 `connect.bat`
 - convenience program to start the listener
 - downloads netcat to attempt the connection if it isn't already available
 
 `revsh.ps1`
-- formatted code of the reverse shell client
+- scans IP addresses via ARP table
+- attempts reverse connection on port 42069
